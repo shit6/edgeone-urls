@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网站短链服务</title>
+    <link href="/static/style.css" rel="stylesheet"/>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
+</head>
+<body>
+<div class="container">
+    <div class="form-container">
+        <h1>生成链接信息</h1>
+        <div class="form-group">
+            <label for="suffix_full" style="display: inline-block;">生成链接：</label>
+            <a id="suffix_link" href="" target="_blank">
+                <div id="suffix_full" style="display: inline-block;"></div>
+            </a>
+        </div>
+        <div class="form-group">
+            <label for="record_urls" style="display: inline-block;">目标地址：</label>
+            <a id="record_link" href="" target="_blank">
+                <div id="record_urls" style="display: inline-block;"></div>
+            </a>
+        </div>
+        <div class="form-group">
+            <label for="tokens_text" style="display: inline-block;">更新密码：</label>
+            <div id="tokens_text" style="display: inline-block;"></div>
+        </div>
+        <div class="form-group">
+            <label for="typing_text" style="display: inline-block;">跳转类型：</label>
+            <div id="typing_text" style="display: inline-block;"></div>
+        </div>
+        <div class="form-group">
+            <label for="expire_days" style="display: inline-block;">过期时间：</label>
+            <div id="expire_days" style="display: inline-block;"></div>
+        </div>
+        <div class="form-group">
+            <label for="guests_pass" style="display: inline-block;">访问密码：</label>
+            <div id="guests_pass" style="display: inline-block;"></div>
+        </div>
+        <div class="form-group hint" style="padding-bottom: 5%">认证密码时，如有用户名请留空，密码输入上方显示的密码</div>
+        <div class="form-group">
+            <label for="spider_text" style="text-align: center;">WebHook请求内容</label>
+            <textarea id="spider_text" rows="7" cols="40" onclick="onText()"
+                      style="display: block; opacity: 0.5; border-radius: 10px;width: 90%;padding-left: 5%;padding-right: 5%;"></textarea>
+        </div>
+        <div class="form-group">
+            <label for="spider_path" style="text-align: center;">WebHook请求地址</label>
+            <textarea id="spider_path" rows="1" cols="40" onclick="onPath()"
+                      style="display: block; opacity: 0.5; border-radius: 3px;width: 90%;padding-left: 5%;padding-right: 5%;"></textarea>
+        </div>
+        <div class="form-group hint" style="text-align: center;">Lucky->STUN穿透->编辑->WebHook->请求体
+            <a href="https://github.com/PIKACHUIM/CFWorkerUrls/blob/main/NATDOG.md">[🔗使用方法]</a><br/>
+        </div>
+        <div class="form-group hint" style="text-align: center;" id="hostname_ip"></div>
+        <div class="form-group hint" style="text-align: center;">上述信息仅显示一次，离开或关闭本页面后将无法再次查看</div>
+        <br/><br/>
+        <button class="modify-btn" onclick="onPost()">修改链接</button>
+        <br/><br/>
+        <button class="update-btn" onclick="location.href='/';">返回主页</button>
+        <button class="github-btn" onclick="location.href='https://github.com/PIKACHUIM/CFWorkerUrls';">
+            <img src="/static/white.png" width="12px" height="12px">&nbsp;GitHub页面
+        </button>
+    </div>
+</div>
+<script>
+    // 页面载入函数 #######################################################
+    function onLoad(name) {
+        const queryString = window.location.search;
+        // 使用URLSearchParams解析查询字符串 ==============================
+        const urlParams = new URLSearchParams(queryString);
+        // 判断是否包含tokens参数 =========================================
+        if (urlParams.has('suffix')) {
+            const suffix = urlParams.get('suffix');
+            const tokens = urlParams.get('tokens');
+            const suffix_full = document.getElementById('suffix_full');
+            const suffix_link = document.getElementById('suffix_link');
+            const spider_text = document.getElementById('spider_text');
+            const hostname_ip = document.getElementById('hostname_ip');
+            const spider_path = document.getElementById('spider_path');
+            spider_path
+            suffix_full.textContent = suffix;
+            suffix_link.href = suffix;
+            spider_text.textContent = '' +
+                '{' +
+                '\n  "suffix": "' + suffix.split("/").pop() + '",' +
+                '\n  "tokens": "' + tokens + '",' +
+                '\n  "typing": "http",' +
+                '\n  "ipaddr": "{ip}",' +
+                '\n  "porter": "{port}"' +
+                '\n}';
+
+            let hostname = window.location.hostname;
+            hostname_ip.textContent = "Webhook请求类型：POST，检测成功字符串：Successfully"
+            spider_path.textContent = "https://" + hostname + "/p/"
+        }
+        if (urlParams.has('tokens')) {
+            const tokens = urlParams.get('tokens');
+            const tokens_text = document.getElementById('tokens_text');
+            tokens_text.textContent = tokens;
+        }
+        if (urlParams.has('guests')) {
+            const guests = urlParams.get('guests');
+            const guests_pass = document.getElementById('guests_pass');
+            guests_pass.textContent = guests;
+        }
+        if (urlParams.has('typing')) {
+            const typing = urlParams.get('typing');
+            const typing_text = document.getElementById('typing_text');
+            const typing_maps = {
+                "iframe": "页面嵌套",
+                "direct": "链接跳转",
+                "proxys": "云端代理",
+                "hidden": "隐藏代理",
+                "agents": "前置代理",
+            };
+            typing_text.textContent = typing_maps[typing];
+        }
+        if (urlParams.has('record')) {
+            const record = urlParams.get('record');
+            const record_urls = document.getElementById('record_urls');
+            const record_link = document.getElementById('record_link');
+            record_link.href = record;
+            record_urls.textContent = record;
+        }
+        if (urlParams.has('expire')) {
+            const expire = urlParams.get('expire');
+            const expire_days = document.getElementById('expire_days');
+            const date_t = new Date(Number(expire));
+            expire_days.textContent = date_t.toISOString().substring(0, 19);
+        }
+    }
+
+    // 提交表单函数 #######################################################
+    function onPost(name) {
+        // 使用URLSearchParams解析查询字符串 ==============================
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        const suffix_full = urlParams.get('suffix');
+        const tokens_text = urlParams.get('tokens');
+        const guests_pass = urlParams.get('guests');
+        window.open("/a/?update=1" +
+            "&suffix=" + suffix_full +
+            "&tokens=" + tokens_text +
+            "&guests=" + guests_pass
+        );
+    }
+
+    // 自动复制内容 #######################################################
+    function onText() {
+        var copyText = document.getElementById("spider_text");
+        copyText.select();
+        document.execCommand("copy");
+        // alert("内容已复制");
+        Swal.fire({
+            position: 'top',
+            icon: 'success',
+            title: '内容已复制',
+            showConfirmButton: false,
+            timer: 700
+        })
+    }
+
+    // 自动复制内容 #######################################################
+    function onPath() {
+        var copyText = document.getElementById("spider_path");
+        copyText.select();
+        document.execCommand("copy");
+        // alert("内容已复制");
+        Swal.fire({
+            position: 'top',
+            icon: 'success',
+            title: '链接已复制',
+            showConfirmButton: false,
+            timer: 700
+        })
+    }
+
+    // 页面加载逻辑 #######################################################
+    onLoad();
+</script>
+
+</body>
+</html>

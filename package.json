@@ -1,0 +1,18 @@
+{
+  "name": "cfworker-urls",
+  "version": "1.0.0",
+  "dependencies": {
+    "@edgeone/ef-types": "^1.0.5",
+    "hono": "^3.12.0",
+    "nanoid": "^3.3.4"
+  },
+  "devDependencies": {
+    "edgeone": "^1.0.27",
+    "typescript": "^5.2.2"
+  },
+  "scripts": {
+    "dev": "edgeone pages dev",
+    "build": "tsc",
+    "deploy": "edgeone pages deploy ./ -n cfworker-urls"
+  }
+}
